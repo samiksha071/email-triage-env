@@ -39,6 +39,8 @@ class GraderResponse(BaseModel):
 
 env = EmailTriageEnvironment()
 TEMPLATE = Path(__file__).parent.parent / "templates" / "index.html"
+if not TEMPLATE.exists():
+    TEMPLATE = Path("/app/templates/index.html")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
