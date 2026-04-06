@@ -1,0 +1,52 @@
+spec_version: 1
+name: email-triage-env
+type: text
+description: >
+  An RL environment where an AI agent learns to triage emails.
+  The agent classifies each email by category (urgent / normal / spam /
+  newsletter / follow_up) and priority (high / medium / low), writes a
+  short summary, and suggests an action. Three difficulty levels are
+  provided (easy, medium, hard) with a programmatic grader scoring
+  0.0–1.0 per episode.
+
+runtime:
+  language: python
+  version: "3.11"
+
+app:
+  framework: fastapi
+  entrypoint: server/app.py
+  port: 7860
+
+tasks:
+  - id: easy
+    description: "5 emails with clear-cut category signals"
+    max_steps: 5
+  - id: medium
+    description: "8 emails with ambiguous senders and mixed signals"
+    max_steps: 8
+  - id: hard
+    description: "12 emails with nuanced priorities and strict grading"
+    max_steps: 12
+
+reward:
+  min: -0.5
+  max: 1.5   # includes episode bonus
+  shape: dense  # reward at every step
+
+action_space:
+  type: structured
+  schema: EmailTriageAction
+
+observation_space:
+  type: structured
+  schema: EmailObservation
+
+author: "hackathon-participant"
+license: MIT
+tags:
+  - email
+  - triage
+  - nlp
+  - classification
+  - real-world
