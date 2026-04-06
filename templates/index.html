@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email Triage RL Environment</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f9fa; color: #1a1a1a; min-height: 100vh; }
+
+  .header { background: #1a1a2e; color: white; padding: 1.2rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+  .header h1 { font-size: 1.3rem; font-weight: 600; }
+  .header .badge { background: #4f46e5; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+  .stat-card { background: white; border-radius: 10px; padding: 1rem 1.2rem; border: 1px solid #e5e7eb; }
+  .stat-card .label { font-size: 12px; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-card .value { font-size: 1.8rem; font-weight: 700; color: #1a1a2e; }
+  .stat-card .value.green { color: #059669; }
+  .stat-card .value.blue { color: #4f46e5; }
+  .stat-card .value.orange { color: #d97706; }
+
+  .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+  .panel { background: white; border-radius: 12px; border: 1px solid #e5e7eb; padding: 1.5rem; }
+  .panel h2 { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: #374151; border-bottom: 1px solid #f3f4f6; padding-bottom: 0.75rem; }
+
+  .task-tabs { display: flex; gap: 8px; margin-bottom: 1.2rem; }
+  .task-tab { padding: 6px 18px; border-radius: 20px; border: 1.5px solid #e5e7eb; background: white; cursor: pointer; font-size: 13px; font-weight: 500; color: #6b7280; transition: all 0.15s; }
+  .task-tab.active { background: #4f46e5; color: white; border-color: #4f46e5; }
+  .task-tab:hover:not(.active) { border-color: #4f46e5; color: #4f46e5; }
+
+  .email-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; transition: border-color 0.2s; }
+  .email-card.active { border-color: #4f46e5; background: #f5f3ff; }
+  .email-card.done { border-color: #d1fae5; background: #f0fdf4; }
+  .email-card.wrong { border-color: #fee2e2; background: #fef2f2; }
+  .email-meta { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .email-subject { font-weight: 600; font-size: 13px; color: #1f2937; flex: 1; }
+  .email-sender { font-size: 11px; color: #9ca3af; margin-bottom: 4px; }
+  .email-body { font-size: 12px; color: #6b7280; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .badge-cat { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+  .badge-urgent   { background: #fee2e2; color: #b91c1c; }
+  .badge-spam     { background: #fef9c3; color: #854d0e; }
+  .badge-normal   { background: #e0f2fe; color: #0369a1; }
+  .badge-newsletter { background: #f3e8ff; color: #7c3aed; }
+  .badge-follow_up { background: #ecfdf5; color: #065f46; }
+  .badge-high   { background: #fee2e2; color: #b91c1c; }
+  .badge-medium { background: #fff7ed; color: #c2410c; }
+  .badge-low    { background: #f0fdf4; color: #166534; }
+
+  .action-form { display: flex; flex-direction: column; gap: 10px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  select, textarea, input[type=text] { width: 100%; padding: 8px 10px; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: 13px; color: #374151; background: white; outline: none; transition: border-color 0.15s; }
+  select:focus, textarea:focus { border-color: #4f46e5; }
+  textarea { resize: vertical; min-height: 70px; font-family: inherit; }
+  label { font-size: 12px; color: #6b7280; font-weight: 500; display: block; margin-bottom: 3px; }
+
+  .btn { padding: 10px 24px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: #4f46e5; color: white; width: 100%; }
+  .btn-primary:hover { background: #4338ca; }
+  .btn-primary:disabled { background: #a5b4fc; cursor: not-allowed; }
+  .btn-secondary { background: white; color: #4f46e5; border: 1.5px solid #4f46e5; }
+  .btn-secondary:hover { background: #f5f3ff; }
+
+  .reward-bar { margin-top: 0.5rem; }
+  .reward-bar .bar-track { height: 8px; background: #f3f4f6; border-radius: 4px; overflow: hidden; }
+  .reward-bar .bar-fill { height: 100%; background: #4f46e5; border-radius: 4px; transition: width 0.4s ease; }
+  .reward-label { display: flex; justify-content: space-between; font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+
+  .log-area { background: #1a1a2e; border-radius: 8px; padding: 1rem; font-family: 'Courier New', monospace; font-size: 12px; color: #a5b4fc; max-height: 200px; overflow-y: auto; }
+  .log-line { margin-bottom: 4px; }
+  .log-line .ts { color: #6b7280; }
+  .log-line .ok { color: #34d399; }
+  .log-line .err { color: #f87171; }
+  .log-line .info { color: #60a5fa; }
+
+  .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 0.5rem; }
+  .score-cell { text-align: center; padding: 0.75rem; border-radius: 8px; background: #f9fafb; border: 1px solid #e5e7eb; }
+  .score-cell .task-name { font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
+  .score-cell .score-val { font-size: 1.4rem; font-weight: 700; margin-top: 2px; }
+  .score-cell .score-val.na { color: #d1d5db; }
+
+  .step-indicator { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .step-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #9ca3af; }
+  .step-dot.done-correct { background: #059669; border-color: #059669; color: white; }
+  .step-dot.done-wrong   { background: #dc2626; border-color: #dc2626; color: white; }
+  .step-dot.active       { background: #4f46e5; border-color: #4f46e5; color: white; }
+
+  .feedback-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 0.75rem 1rem; font-size: 12px; color: #166534; margin-top: 0.75rem; display: none; }
+  .feedback-box.show { display: block; }
+  .feedback-box.wrong { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+
+  @media (max-width: 700px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>📧 Email Triage RL Environment</h1>
+    <div style="font-size:12px;color:#a5b4fc;margin-top:2px;">OpenEnv · Meta × Hugging Face Hackathon</div>
+  </div>
+  <span class="badge">🟢 Server running</span>
+</div>
+
+<div class="container">
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="label">Current Score</div>
+      <div class="value blue" id="stat-score">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Correct</div>
+      <div class="value green" id="stat-correct">0 / 0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Cumulative Reward</div>
+      <div class="value" id="stat-reward">0.00</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Task</div>
+      <div class="value orange" id="stat-task">—</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- Left: Email + Action -->
+    <div>
+      <div class="panel" style="margin-bottom:1.5rem;">
+        <h2>Current Email</h2>
+
+        <div class="task-tabs">
+          <button class="task-tab active" onclick="startTask('easy')">Easy (5)</button>
+          <button class="task-tab" onclick="startTask('medium')">Medium (8)</button>
+          <button class="task-tab" onclick="startTask('hard')">Hard (12)</button>
+        </div>
+
+        <div class="step-indicator" id="step-dots"></div>
+
+        <div id="email-display">
+          <div style="text-align:center;padding:2rem;color:#9ca3af;">
+            <div style="font-size:2rem;margin-bottom:0.5rem;">📬</div>
+            <div>Click a task above to start</div>
+          </div>
+        </div>
+
+        <div class="feedback-box" id="feedback-box"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Your Classification</h2>
+        <div class="action-form">
+          <div class="form-row">
+            <div>
+              <label>Category</label>
+              <select id="act-category">
+                <option value="urgent">🔴 Urgent</option>
+                <option value="normal">🔵 Normal</option>
+                <option value="spam">🟡 Spam</option>
+                <option value="newsletter">🟣 Newsletter</option>
+                <option value="follow_up">🟢 Follow Up</option>
+              </select>
+            </div>
+            <div>
+              <label>Priority</label>
+              <select id="act-priority">
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label>Summary (max 300 chars)</label>
+            <textarea id="act-summary" placeholder="Write a brief summary of this email..."></textarea>
+          </div>
+          <div>
+            <label>Suggested Action</label>
+            <input type="text" id="act-action" placeholder="e.g. Reply within 24 hours" />
+          </div>
+          <button class="btn btn-primary" id="submit-btn" onclick="submitAction()" disabled>Submit Classification</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Scores + Log -->
+    <div>
+      <div class="panel" style="margin-bottom:1.5rem;">
+        <h2>Progress</h2>
+        <div class="reward-bar">
+          <div class="reward-label">
+            <span>Episode Progress</span>
+            <span id="progress-pct">0%</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" id="progress-bar" style="width:0%"></div></div>
+        </div>
+        <div style="margin-top:1rem;" class="reward-bar">
+          <div class="reward-label">
+            <span>Accuracy</span>
+            <span id="accuracy-pct">0%</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" id="accuracy-bar" style="width:0%;background:#059669"></div></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:1.5rem;">
+        <h2>Scores by Task</h2>
+        <div class="score-grid">
+          <div class="score-cell">
+            <div class="task-name">Easy</div>
+            <div class="score-val na" id="score-easy">—</div>
+          </div>
+          <div class="score-cell">
+            <div class="task-name">Medium</div>
+            <div class="score-val na" id="score-medium">—</div>
+          </div>
+          <div class="score-cell">
+            <div class="task-name">Hard</div>
+            <div class="score-val na" id="score-hard">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Live Log</h2>
+        <div class="log-area" id="log-area">
+          <div class="log-line"><span class="info">[system] Email Triage RL Environment ready.</span></div>
+          <div class="log-line"><span class="info">[system] Select a task difficulty to begin.</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const BASE = '';
+let state = { taskId: null, step: 0, total: 0, correct: 0, reward: 0, done: false, results: {} };
+let currentObs = null;
+
+function log(msg, type='info') {
+  const area = document.getElementById('log-area');
+  const ts = new Date().toLocaleTimeString();
+  const div = document.createElement('div');
+  div.className = 'log-line';
+  div.innerHTML = `<span class="ts">[${ts}]</span> <span class="${type}">${msg}</span>`;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+async function startTask(taskId) {
+  document.querySelectorAll('.task-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+
+  log(`Starting task: ${taskId}`, 'info');
+  hideFeedback();
+
+  try {
+    const res = await fetch(`${BASE}/reset`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({task_id: taskId})
+    });
+    const data = await res.json();
+    currentObs = data.observation;
+    state = { taskId, step: 0, total: data.info.total_emails, correct: 0, reward: 0, done: false, results: state.results };
+
+    log(`Episode started. ${state.total} emails to classify.`, 'ok');
+    renderEmail(currentObs);
+    renderStepDots();
+    updateStats();
+    document.getElementById('submit-btn').disabled = false;
+    document.getElementById('stat-task').textContent = taskId.toUpperCase();
+  } catch(e) {
+    log(`Error: ${e.message}. Is the server running?`, 'err');
+  }
+}
+
+async function submitAction() {
+  if (!currentObs || state.done) return;
+
+  const action = {
+    category: document.getElementById('act-category').value,
+    priority: document.getElementById('act-priority').value,
+    summary: document.getElementById('act-summary').value || 'No summary provided.',
+    suggested_action: document.getElementById('act-action').value || 'Review manually.'
+  };
+
+  document.getElementById('submit-btn').disabled = true;
+  log(`Step ${state.step+1}: ${action.category} / ${action.priority}`, 'info');
+
+  try {
+    const res = await fetch(`${BASE}/step`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(action)
+    });
+    const data = await res.json();
+    const reward = data.reward;
+    const isCorrect = reward >= 0.6;
+
+    state.step++;
+    state.reward += reward;
+    if (isCorrect) state.correct++;
+    state.done = data.done;
+    currentObs = data.observation;
+
+    log(`Reward: ${reward >= 0 ? '+' : ''}${reward.toFixed(3)} — ${data.info.step_feedback?.split('|')[0]?.trim()}`, reward >= 0.5 ? 'ok' : 'err');
+
+    showFeedback(data.info.step_feedback, isCorrect);
+    renderStepDots(isCorrect);
+    updateStats();
+
+    if (data.done) {
+      await fetchFinalScore();
+      document.getElementById('submit-btn').disabled = true;
+      log(`Episode complete!`, 'ok');
+    } else {
+      renderEmail(currentObs);
+      document.getElementById('submit-btn').disabled = false;
+      document.getElementById('act-summary').value = '';
+      document.getElementById('act-action').value = '';
+    }
+  } catch(e) {
+    log(`Error: ${e.message}`, 'err');
+    document.getElementById('submit-btn').disabled = false;
+  }
+}
+
+async function fetchFinalScore() {
+  try {
+    const res = await fetch(`${BASE}/run_grader`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' });
+    const data = await res.json();
+    const scoreEl = document.getElementById(`score-${state.taskId}`);
+    if (scoreEl) {
+      scoreEl.textContent = (data.score * 100).toFixed(0) + '%';
+      scoreEl.className = 'score-val ' + (data.score >= 0.7 ? 'green' : data.score >= 0.4 ? 'orange' : 'err');
+    }
+    state.results[state.taskId] = data.score;
+    log(`Final score for ${state.taskId}: ${(data.score*100).toFixed(1)}%`, 'ok');
+  } catch(e) {}
+}
+
+function renderEmail(obs) {
+  if (!obs || obs.email_id === 'DONE') return;
+  const catClass = `badge-${obs.task_id}`;
+  document.getElementById('email-display').innerHTML = `
+    <div class="email-card active">
+      <div class="email-meta">
+        <div class="email-subject">${escHtml(obs.subject)}</div>
+        <span style="font-size:11px;color:#9ca3af;white-space:nowrap;margin-left:8px;">${obs.has_attachments ? '📎' : ''}</span>
+      </div>
+      <div class="email-sender">From: ${escHtml(obs.sender)} · Thread: ${obs.thread_length} msg${obs.thread_length > 1 ? 's' : ''}</div>
+      <div class="email-body">${escHtml(obs.body)}</div>
+      <div style="margin-top:8px;font-size:11px;color:#9ca3af;">${obs.emails_remaining} email${obs.emails_remaining !== 1 ? 's' : ''} remaining</div>
+    </div>
+  `;
+}
+
+function renderStepDots(lastCorrect) {
+  const container = document.getElementById('step-dots');
+  if (state.total === 0) { container.innerHTML = ''; return; }
+  let html = '';
+  for (let i = 0; i < state.total; i++) {
+    if (i < state.step - 1) {
+      html += `<div class="step-dot done-correct">${i+1}</div>`;
+    } else if (i === state.step - 1) {
+      const cls = lastCorrect === undefined ? 'active' : (lastCorrect ? 'done-correct' : 'done-wrong');
+      html += `<div class="step-dot ${cls}">${i+1}</div>`;
+    } else if (i === state.step) {
+      html += `<div class="step-dot active">${i+1}</div>`;
+    } else {
+      html += `<div class="step-dot">${i+1}</div>`;
+    }
+  }
+  container.innerHTML = html;
+}
+
+function updateStats() {
+  const pct = state.total > 0 ? Math.round((state.step / state.total) * 100) : 0;
+  const acc = state.step > 0 ? Math.round((state.correct / state.step) * 100) : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-pct').textContent = pct + '%';
+  document.getElementById('accuracy-bar').style.width = acc + '%';
+  document.getElementById('accuracy-pct').textContent = acc + '%';
+  document.getElementById('stat-correct').textContent = `${state.correct} / ${state.step}`;
+  document.getElementById('stat-reward').textContent = state.reward.toFixed(2);
+  if (state.results[state.taskId] !== undefined) {
+    document.getElementById('stat-score').textContent = (state.results[state.taskId] * 100).toFixed(0) + '%';
+  }
+}
+
+function showFeedback(text, correct) {
+  const box = document.getElementById('feedback-box');
+  box.textContent = text;
+  box.className = 'feedback-box show' + (correct ? '' : ' wrong');
+}
+function hideFeedback() {
+  document.getElementById('feedback-box').className = 'feedback-box';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
