@@ -1,3 +1,11 @@
+---
+title: Email Triage RL Environment
+emoji: 📧
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+pinned: false
+---
 # 📧 Email Triage — OpenEnv RL Environment
 
 An **OpenEnv-compatible reinforcement learning environment** where an AI agent learns to triage emails by category and priority. Built for the **Meta × Hugging Face OpenEnv Hackathon**.
