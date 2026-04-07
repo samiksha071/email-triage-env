@@ -94,3 +94,10 @@ async def run_grader():
         cumulative_reward=s.cumulative_reward,
         message=f"Episode {'complete' if s.done else 'in progress'}. Score: {score:.4f}",
     )
+
+def main():
+    import uvicorn
+    uvicorn.run("server.app:app", host="0.0.0.0", port=7860)
+
+if __name__=="__main__":
+    main()    
