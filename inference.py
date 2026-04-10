@@ -167,7 +167,7 @@ def run_task(task_id: str) -> dict:
 
     # Fetch grader score
     grader = env_post("/run_grader", {})
-    final_score = grader["score"]
+    final_score = max(0.05, min(0.95, float(grader["score"])))
 
     log("[END]", {
         "task_id":          task_id,
@@ -205,7 +205,7 @@ def main():
             print(f"  [{task_id:6s}] score={result['final_score']:.4f}  steps={result['total_steps']}")
         except Exception as exc:
             print(f"  [{task_id:6s}] ERROR: {exc}", file=sys.stderr)
-            results.append({"task_id": task_id, "final_score": 0.0, "error": str(exc)})
+            results.append({"task_id": task_id, "final_score": 0.05, "error": str(exc)})
 
     print()
     scores = [r["final_score"] for r in results]
