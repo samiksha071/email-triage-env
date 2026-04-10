@@ -417,7 +417,7 @@ ACCURACY_THRESHOLD     =  0.80
 def _summary_relevance_score(summary: str, email: dict) -> float:
     """Heuristic: does the summary mention keywords from subject/body?"""
     if not summary.strip():
-        return 0.0
+        return 0.01
     combined = (email["subject"] + " " + email["body"]).lower()
     summary_words = set(summary.lower().split())
     # Pick content words from email (len > 4)
