@@ -566,14 +566,16 @@ class EmailTriageEnvironment:
         return self._state
 
     def get_task_score(self) -> float:
-        """
-        Compute final normalised score for grader [0.0, 1.0].
-        """
-        if self._state.total_classifications == 0:
-            return 0.0
-        max_possible = self._state.total_emails * 1.0 + BONUS_HIGH_ACCURACY
-        score = self._state.cumulative_reward / max_possible
-        return round(max(0.01, min(0.99, score)), 4)
+    """
+    Compute final normalised score for grader, strictly between 0 and 1.
+    """
+    if self._state.total_classifications == 0:
+        return 0.01
+    max_possible = self._state.total_emails * 1.0 + BONUS_HIGH_ACCURACY
+    score = self._state.cumulative_reward / max_possible
+    # Must be strictly between 0 and 1 (not 0.0, not 1.0)
+    score = max(0.01, min(0.99, score))
+    return round(score, 4)
 
     # ── Private helpers ──────────────────────────────────────────────────────
 
