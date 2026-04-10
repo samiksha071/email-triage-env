@@ -573,7 +573,7 @@ class EmailTriageEnvironment:
             return 0.0
         max_possible = self._state.total_emails * 1.0 + BONUS_HIGH_ACCURACY
         score = self._state.cumulative_reward / max_possible
-        return round(max(0.0, min(1.0, score)), 4)
+        return round(max(0.01, min(0.99, score)), 4)
 
     # ── Private helpers ──────────────────────────────────────────────────────
 
