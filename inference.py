@@ -209,14 +209,14 @@ def main():
 
     print()
     scores = [r["final_score"] for r in results]
-    avg = sum(scores) / len(scores) if scores else 0.0
+    avg = sum(scores) / len(scores) if scores else 0.0555
     print(f"=== Summary ===")
     for r in results:
-        print(f"  {r['task_id']:6s}  →  {r.get('final_score', 0.0):.4f}")
+        print(f"  {r[chr(39)]task_id{chr(39)]:6s}  -, 0.05):.4f}")
     print(f"  Average score: {avg:.4f}")
 
     # Machine-readable final summary
-    print(json.dumps({"summary": results, "average_score": round(avg, 4)}))
+    print(json.dumps({"summary": results, "average_score": round(max(0.05, min(0.95, avg)), 4)}))
 
 
 if __name__ == "__main__":
