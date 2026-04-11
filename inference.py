@@ -202,17 +202,17 @@ def main():
         try:
             result = run_task(task_id)
             results.append(result)
-            print(f"  [{task_id:6s}] score={result['final_score']:.4f}  steps={result['total_steps']}")
+            print(f"  [{task_id:6s}] score={result['score']:.4f}  steps={result['total_steps']}")
         except Exception as exc:
             print(f"  [{task_id:6s}] ERROR: {exc}", file=sys.stderr)
             results.append({"task_id": task_id, "final_score": 0.05, "error": str(exc)})
 
     print()
-    scores = [r["final_score"] for r in results]
+    scores = [r["score"] for r in results]
     avg = sum(scores) / len(scores) if scores else 0.0555
     print(f"=== Summary ===")
     for r in results:
-        print(f"  {r['task_id']:6s}  ->  {r.get('final_score', 0.05):.4f}")
+        print(f"  {r['task_id']:6s}  ->  {r.get('score', 0.05):.4f}")
     print(f"  Average score: {avg:.4f}")
 
     # Machine-readable final summary
