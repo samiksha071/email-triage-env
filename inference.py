@@ -21,7 +21,7 @@ Structured stdout log format (required by hackathon evaluator)
 --------------------------------------------------------------
 [START] {"task_id": ..., "model": ..., "env_url": ...}
 [STEP]  {"task_id": ..., "step": ..., "email_id": ..., "action": {...}, "reward": ..., "done": ...}
-[END]   {"task_id": ..., "final_score": ..., "total_steps": ..., "cumulative_reward": ...}
+[END]   {"task_id": ..., "score": ..., "total_steps": ..., "cumulative_reward": ...}
 """
 
 import json
@@ -205,7 +205,7 @@ def main():
             print(f"  [{task_id:6s}] score={result['score']:.4f}  steps={result['total_steps']}")
         except Exception as exc:
             print(f"  [{task_id:6s}] ERROR: {exc}", file=sys.stderr)
-            results.append({"task_id": task_id, "final_score": 0.05, "error": str(exc)})
+            results.append({"task_id": task_id, "score": 0.05, "error": str(exc)})
 
     print()
     scores = [r["score"] for r in results]
