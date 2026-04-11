@@ -167,7 +167,7 @@ def run_task(task_id: str) -> dict:
 
     # Fetch grader score
     grader = env_post("/run_grader", {})
-    final_score = max(0.05, min(0.95, float(grader["score"])))
+    final_score = round(max(0.06, min(0.94, float(grader["score"]))), 2)
 
     log("[END]", {
         "task_id":          task_id,
@@ -178,7 +178,7 @@ def run_task(task_id: str) -> dict:
 
     return {
         "task_id":          task_id,
-        "final_score":      final_score,
+        "score":      final_score,
         "total_steps":      step_num,
         "cumulative_reward": round(cumulative_reward, 4),
     }
