@@ -150,7 +150,7 @@ def run_task(task_id: str) -> dict:
         action = classify_email(obs)
 
         result = env_post("/step", action)
-        reward = result["reward"]
+        reward = round(max(0.01, min(0.99, float(result["reward"]))), 4)
         done   = result["done"]
         obs    = result["observation"]
         info   = result["info"]
