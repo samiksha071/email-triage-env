@@ -576,6 +576,7 @@ class EmailTriageEnvironment:
         # Clamp strictly between 0 and 1 (not 0.0, not 1.0)
         score = max(0.05, min(0.95, raw))
         return round(score, 4)
+    
     def _make_observation(self, feedback: Optional[str] = None) -> EmailObservation:
         if self._state.current_email_index >= len(self._emails):
             return self._make_terminal_observation(feedback)
