@@ -212,7 +212,7 @@ def main():
     avg = sum(scores) / len(scores) if scores else 0.0555
     print(f"=== Summary ===")
     for r in results:
-        print(f"  {r[chr(39)]task_id{chr(39)]:6s}  -, 0.05):.4f}")
+        print(f"  {r['task_id']:6s}  ->  {r.get('final_score', 0.05):.4f}")
     print(f"  Average score: {avg:.4f}")
 
     # Machine-readable final summary
