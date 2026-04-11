@@ -171,14 +171,14 @@ def run_task(task_id: str) -> dict:
 
     log("[END]", {
         "task_id":          task_id,
-        "score":            final_score,
+        "final_score":            final_score,
         "total_steps":      step_num,
         "cumulative_reward": round(cumulative_reward, 4),
     })
 
     return {
         "task_id":          task_id,
-        "score":      final_score,
+        "final_score":      final_score,
         "total_steps":      step_num,
         "cumulative_reward": round(cumulative_reward, 4),
     }
