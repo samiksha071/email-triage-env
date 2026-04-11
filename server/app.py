@@ -21,7 +21,7 @@ class ResetRequest(BaseModel):
 
 class StepResponse(BaseModel):
     observation: EmailObservation
-    reward: float
+    reward: float = 0.5
     done: bool
     info: Dict[str, Any]
 
