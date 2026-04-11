@@ -87,14 +87,16 @@ async def list_tasks():
 @app.post("/run_grader", response_model=GraderResponse)
 async def run_grader():
     s = env.state()
-    score = env.get_task_score()
-    # Score must be strictly between 0 and 1
-    score = max(0.05, min(0.95, score))
+    raw_score = env.get_task_score()
+    # Strictly between 0 and 1
+    score = round(max(0.05, min(0.95, float(raw_score))), 4)
     return GraderResponse(
-        task_id=s.task_id, score=round(score, 4),
-        correct=s.correct_classifications, total=s.total_classifications,
-        cumulative_reward=s.cumulative_reward,
-        message=f"Episode {'complete' if s.done else 'in progress'}. Score: {score:.4f}",
+        task_id=s.task_id,
+        score=score,
+        correct=s.correct_classifications,
+        total=s.total_classifications,
+        cumulative_reward=float(s.cumulative_reward),
+        message=f"Score: {score:.4f}",
     )
 
 def main():
