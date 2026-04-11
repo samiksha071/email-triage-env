@@ -410,7 +410,7 @@ SUMMARY_WEIGHT  = 0.1
 
 PENALTY_WRONG_CATEGORY = -0.3
 PENALTY_LONG_SUMMARY   = -0.1
-BONUS_HIGH_ACCURACY    =  0.5
+BONUS_HIGH_ACCURACY    =  0.4999
 ACCURACY_THRESHOLD     =  0.80
 
 
@@ -574,7 +574,7 @@ class EmailTriageEnvironment:
             return 0.05
         raw = self._state.cumulative_reward / max_possible
         # Clamp strictly between 0 and 1 (not 0.0, not 1.0)
-        score = max(0.05, min(0.95, raw))
+        score = max(0.01, min(0.99, raw))
         return round(score, 4)
     
     def _make_observation(self, feedback: Optional[str] = None) -> EmailObservation:
