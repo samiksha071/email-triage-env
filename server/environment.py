@@ -485,7 +485,7 @@ def grade_action(action: EmailTriageAction, email: dict, task_id: str) -> Tuple[
         reward += PENALTY_LONG_SUMMARY
         messages.append(f"✗ Summary too long (>300 chars) ({PENALTY_LONG_SUMMARY})")
 
-    reward = round(max(-0.5, min(1.0, reward)), 4)
+    reward = round(max(-0.49, min(0.99, reward)), 4)
     return reward, " | ".join(messages)
 
 
