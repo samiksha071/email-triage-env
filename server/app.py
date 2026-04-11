@@ -31,7 +31,7 @@ class ResetResponse(BaseModel):
 
 class GraderResponse(BaseModel):
     task_id: str
-    score: float =2.5
+    score: float =0.5
     correct: int
     total: int
     cumulative_reward: float
