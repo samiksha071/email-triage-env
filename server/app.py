@@ -89,15 +89,19 @@ async def run_grader():
     s = env.state()
     raw_score = env.get_task_score()
     score = round(max(0.05, min(0.95, float(raw_score))), 4)
-    # Extra safety — never return boundary values
     if score <= 0.0 or score >= 1.0:
         score = 0.5
+    task_id = s.task_id
+    correct = s.correct_classifications
+    total = s.total_classifications
+    cumulative = float(s.cumulative_reward)
+    env.reset(task_id=task_id)
     return GraderResponse(
-        task_id=s.task_id,
+        task_id=task_id,
         score=score,
-        correct=s.correct_classifications,
-        total=s.total_classifications,
-        cumulative_reward=float(s.cumulative_reward),
+        correct=correct,
+        total=total,
+        cumulative_reward=cumulative,
         message=f"Score: {score:.4f}",
     )
 
